@@ -176,7 +176,7 @@ This the standard workflow for performing hypothesis tests.
 
 7.  Construct and record a confidence interval for the difference between the weights of those who exercise at least three times a week and those who don't, and interpret this interval in context of the data.
 
-**The confidence interval at 95% confidence level is [1.10, 2.44] for the observed difference. We would therefore reject the null hypothesis**
+**The confidence interval at 95% confidence level is [1.10, 2.44] for the observed difference. We would therefore fail to reject the null hypothesis as our point estimate is within this range.**
 ```{r}
 set.seed(42)
 
@@ -198,7 +198,7 @@ print(ci_dist)
 
 8.  Calculate a 95% confidence interval for the average height in meters (`height`) and interpret it in context.
 
-**Insert your answer here**
+**My point estimate is 1.69, which falls between my 95% confidence interval for 1.688 and 1.692, and as such we would fail to reject the null hypothesis**
 
 ```{r}
 yrbss %>%
@@ -220,18 +220,99 @@ height_dist <- yrbss %>%
 
 9.  Calculate a new confidence interval for the same parameter at the 90% confidence level. Comment on the width of this interval versus the one obtained in the previous exercise.
 
-**Insert your answer here**
+**The confidence interval does not change materially; our confidence interval at 90% level is 1.688 to 1.691, which is slightly narrower. We would still fail to reject the null hypothesis.**
+```{r}
+height_dist_90 <- yrbss %>%
+  drop_na(height) %>%
+  specify(response = height) %>%
+  generate(reps = 1000, type = "bootstrap") %>%
+  calculate(stat = "mean") |> 
+  get_confidence_interval(point_estimate = height_obs_mean, level = .90, type = "se")
+```
+
 
 10. Conduct a hypothesis test evaluating whether the average height is different for those who exercise at least three times a week and those who don't.
 
-**Insert your answer here**
+**Null hypothesis: There is no difference in average height for those who exercise at least 3x a week**
+
+**Alternative hypothesis: There is a difference in average height for those who exercise at least 3x a week**
+
+**Our observed mean difference in height for those who exercise 3+ days a week versus those who do not is 0.0376. Our confidence interval falls at (0.337, 0.0416) which captures our observed mean difference, so we would fail to reject the null hypothesis**
+```{r}
+yrbss %>%
+  group_by(physical_3plus) %>%
+  summarise(mean_height = mean(height, na.rm = TRUE))
+```
+
+```{r}
+obs_diff_height <- yrbss %>%
+  drop_na(physical_3plus) %>%
+  specify(height ~ physical_3plus) %>%
+  calculate(stat = "diff in means", order = c("yes", "no"))
+```
+
+```{r}
+null_dist_height <- yrbss %>%
+  drop_na(physical_3plus) %>%
+  specify(height ~ physical_3plus) %>%
+  hypothesize(null = "independence") %>%
+  generate(reps = 1000, type = "permute") %>%
+  calculate(stat = "diff in means", order = c("yes", "no")) |> 
+  get_confidence_interval(point_estimate = obs_diff_height, level = .95, type = "se")
+```
+
+
 
 11. Now, a non-inference task: Determine the number of different options there are in the dataset for the `hours_tv_per_school_day` there are.
 
-**Insert your answer here**
+**There are 7 unique values of `hours_tv_per_school_day`, excluding nulls.**
+```{r}
+unique(yrbss$hours_tv_per_school_day)
+```
+
 
 12. Come up with a research question evaluating the relationship between height or weight and sleep. Formulate the question in a way that it can be answered using a hypothesis test and/or a confidence interval. Report the statistical results, and also provide an explanation in plain language. Be sure to check all assumptions, state your $\alpha$ level, and conclude in context.
 
-**Insert your answer here**
+**Question: Does sleeping for less than 8 hours a day affect weight in high school students? **
+
+**Null hypothesis: There is no relationship between weight and sleep, when sleep is less than 8 hours a day**
+
+**Alternative hypothesis: There is a relationship between weight and sleep, when sleep is less than 8 hours a day**
+
+**Conditions for independence and sample size are satisfied. We calculate our observed difference in means to be 0.5. We proceed to calculate a confidence interval for alpha = 0.05 and find it to be (-0.107, 1,11). Given our point estimate falls within this range, we fail to reject the null hypothesis.**
+
+**To summarize, we are 95% confident there is not a significant difference between students who sleep more or less than 8 hours, and their weight.**
+```{r}
+unique(yrbss$school_night_hours_sleep)
+```
+
+
+```{r}
+yrbss <- yrbss %>% 
+  mutate(sleep_less8 = ifelse(yrbss$school_night_hours_sleep %in%(c("6", "<5", "7")), "yes", "no"))
+```
+
+```{r}
+yrbss |> 
+  group_by(sleep_less8) |> 
+  summarize(count = n())
+```
+
+```{r}
+obs_diff_sleep8 <- yrbss %>%
+  drop_na(sleep_less8) %>%
+  specify(weight ~ sleep_less8) %>%
+  calculate(stat = "diff in means", order = c("yes", "no"))
+```
+
+```{r}
+null_dist_sleep8 <- yrbss %>%
+  drop_na(sleep_less8) %>%
+  specify(weight ~ sleep_less8) %>%
+  hypothesize(null = "independence") %>%
+  generate(reps = 1000, type = "permute") %>%
+  calculate(stat = "diff in means", order = c("yes", "no")) |> 
+  get_confidence_interval(level = 0.95, point_estimate = obs_diff_sleep8, type="se")
+```
 
 ------------------------------------------------------------------------
