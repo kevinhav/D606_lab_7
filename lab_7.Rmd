@@ -117,7 +117,7 @@ yrbss |>
 
 **Null hypothesis: there is no difference between the average weights of those who exercise and those who don't (**$H_0: \bar{x}_y = \bar{x}_n$)
 
-**Alternative hypothesis: there is difference between the average weights of those who exercise and those who don't (**$H_0: \bar{x}_y \ne \bar{x}_n$)
+**Alternative hypothesis: there is difference between the average weights of those who exercise and those who don't (**$H_A: \bar{x}_y \ne \bar{x}_n$)
 
 Next, we will introduce a new function, `hypothesize`, that falls into the `infer` workflow. You will use this method for conducting hypothesis tests.
 
@@ -128,6 +128,8 @@ obs_diff <- yrbss %>%
   drop_na(physical_3plus) %>%
   specify(weight ~ physical_3plus) %>%
   calculate(stat = "diff in means", order = c("yes", "no"))
+
+print(obs_diff) # 1.77
 ```
 
 Notice how you can use the functions `specify` and `calculate` again like you did for calculating confidence intervals. Here, though, the statistic you are searching for is the difference in means, with the order being `yes - no != 0`.
